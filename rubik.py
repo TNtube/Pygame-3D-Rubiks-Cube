@@ -1,6 +1,8 @@
+from __future__ import annotations
 import pygame
 from numpy import dot
 from utils import average_z, rot_matrix, fit_point
+from math import radians
 
 COLORS = pygame.color.THECOLORS
 BLACK = 0x000000
@@ -10,7 +12,7 @@ class Object:
     def __init__(self, vertices: list[tuple, tuple], edges: list[tuple], length: int, size: tuple):
         self.vertices = vertices
         self.edges = edges
-        self.rotation = [4, 4, 0]
+        self.rotation = [radians(45), radians(45), 0]
         self.movement = [size[0], size[1], length]
         self.location = vertices
 
@@ -35,6 +37,7 @@ class Rubik:
                          (COLORS["green"], (4, 5, 7, 6)), (COLORS["white"], (2, 3, 7, 6)),
                          (COLORS["orange"], (0, 4, 6, 2)), (COLORS["red"], (1, 5, 7, 3))]
         self.cubes = self.init_cube()
+        self.faces = {"x": {}, "y": {}, "z": {}}
 
     def init_cube(self) -> list[Object]:
         cubes = []
@@ -42,8 +45,7 @@ class Rubik:
             for j in range(-1, 2):
                 for k in range(-1, 2):
                     vert = [(pos[0] + i * 2, pos[1] + j * 2, pos[2] + k * 2) for pos in self.vertices]
-                    if not (i == j == k == 0) and vert not in [obj.vertices for obj in cubes]:
-                        cubes.append(Object(vert, self.polygons, 70, self.size))
+                    cubes.append(Object(vert, self.polygons, 70, self.size))
         return cubes
 
     def draw_shapes(self) -> None:
@@ -54,6 +56,6 @@ class Rubik:
         pol.sort(key=lambda p: average_z(p[1]))
 
         for col, points in pol:
-            po = [*(fit_point(point, self.cubes[0])for point in points)]
+            po = list((fit_point(point, self.cubes[0])for point in points))
             pygame.draw.polygon(self.screen, col, po)
             pygame.draw.polygon(self.screen, BLACK, po, 3)

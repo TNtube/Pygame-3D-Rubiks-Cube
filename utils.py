@@ -1,21 +1,30 @@
 from math import cos, sin
+import numpy as np
 
 
-def average_z(dots):
+def average_z(dots: tuple[tuple]):
     return sum(dot[2] for dot in dots)/len(dots)
 
 
-def rot_matrix(a, b, t):
+def rot_matrix(a: int, b: int, t: int):
     sa, ca = sin(a), cos(a)
     sb, cb = sin(b), cos(b)
     st, ct = sin(t), cos(t)
-    return (
-        (cb * ct, -cb * st, sb),
-        (ca * st + sa * sb * ct, ca * ct - st * sa * sb, -cb * sa),
-        (st * sa - ca * sb * ct, ca * st * sb + sa * ct, ca * cb)
-    )
+    r_x = [[1, 0, 0],
+           [0, ca, -sa],
+           [0, sa, ca]]
+
+    r_y = [[cb, 0, sb],
+           [0, 1, 0],
+           [-sb, 0, cb]]
+
+    r_z = [[ct, -st, 0],
+           [st, ct, 0],
+           [0, 0, 1]]
+
+    return np.dot(r_z, np.dot(r_y, r_x))
 
 
-def fit_point(vec, shape):
+def fit_point(vec: tuple[int, int], shape):
     return [round(shape.movement[2] / 2 * coordinate + frame / 2)
-            for coordinate, frame in zip(vec, shape.movement[:-1])]
+            for coordinate, frame in zip(vec, shape.movement[:2])]

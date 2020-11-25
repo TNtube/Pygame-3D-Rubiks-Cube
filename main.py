@@ -1,25 +1,23 @@
 import pygame
 from rubik import Rubik
+from math import radians
 
-axis_x, axis_y, axis_z = 0, 1, 2
-
-BLACK, WHITE = 0x000, 0xffffff
-
-colors = pygame.color.THECOLORS
+AXIS_X, AXIS_Y, AXIS_Z = 0, 1, 2
+WHITE = 0xffffff
 
 
 def main(screen):
     clock = pygame.time.Clock()
     rubik = Rubik(screen)
 
-    rad = 0.05
+    rad = radians(3)
 
-    params = {pygame.K_UP: (axis_x, -rad),
-              pygame.K_DOWN: (axis_x, rad),
-              pygame.K_LEFT: (axis_y, -rad),
-              pygame.K_RIGHT: (axis_y, rad),
-              pygame.K_a: (axis_z, -rad),
-              pygame.K_d: (axis_z, rad)}
+    params = {pygame.K_UP: (AXIS_X, -rad),
+              pygame.K_DOWN: (AXIS_X, rad),
+              pygame.K_LEFT: (AXIS_Y, -rad),
+              pygame.K_RIGHT: (AXIS_Y, rad),
+              pygame.K_q: (AXIS_Z, -rad),
+              pygame.K_d: (AXIS_Z, rad)}
 
     running = True
     while running:
@@ -30,7 +28,7 @@ def main(screen):
         keys = pygame.key.get_pressed()
         for key in params:
             if keys[key]:
-                for cube in rubik.cubes[9:-9]:
+                for cube in rubik.cubes[2::3]:
                     cube.rotate(*params[key])
         screen.fill(WHITE)
 
