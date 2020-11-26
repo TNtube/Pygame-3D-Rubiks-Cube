@@ -28,7 +28,7 @@ def main(screen):
         keys = pygame.key.get_pressed()
         for key in params:
             if keys[key]:
-                for cube in rubik.cubes[2::3]:
+                for cube in rubik.cubes[::3]:
                     cube.rotate(*params[key])
         screen.fill(WHITE)
 
