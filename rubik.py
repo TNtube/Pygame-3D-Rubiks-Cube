@@ -1,61 +1,84 @@
-from __future__ import annotations
 import pygame
-from numpy import dot
-from utils import average_z, rot_matrix, fit_point
-from math import radians
+import OpenGL.GL as GL
 
-COLORS = pygame.color.THECOLORS
-BLACK = 0x000000
+COLORS = {key: tuple(value[:3]) for key, value in pygame.color.THECOLORS.items()}
 
 
-class Object:
-    def __init__(self, vertices: list[tuple, tuple], edges: list[tuple], length: int, size: tuple):
-        self.vertices = vertices
-        self.edges = edges
-        self.rotation = [radians(45), radians(45), 0]
-        self.movement = [size[0], size[1], length]
-        self.location = vertices
+class Cube(object):
+    edges = ((0, 1), (0, 3), (0, 4), (2, 1), (2, 3), (2, 7), (6, 3), (6, 4), (6, 7), (5, 1), (5, 4), (5, 7))
+    polygons = ((0, 1, 2, 3), (3, 2, 7, 6), (6, 7, 5, 4), (4, 5, 1, 0), (1, 5, 7, 2), (4, 0, 3, 6))
+    vertices = (
+        (1, -1, -1), (1, 1, -1), (-1, 1, -1), (-1, -1, -1),
+        (1, -1, 1), (1, 1, 1), (-1, -1, 1), (-1, 1, 1)
+    )
+    colors = (COLORS["red"], COLORS["green"], (1, 0.5, 0), COLORS["orange"], COLORS["white"], COLORS["blue"])
 
-    def rotate(self, axe: int, o: int) -> None:
-        self.rotation[axe] += o
+    def __init__(self, ident: tuple, n: int, scale: int) -> None:
+        self.n = n
+        self.scale = scale
+        self.current = [*ident]
+        self.rot = [[1 if i == j else 0 for i in range(3)] for j in range(3)]
 
-    def polygon(self) -> list[tuple[tuple, tuple]]:
-        self.location = dot(self.vertices, rot_matrix(*self.rotation))
-        return [(color, (self.location[v1], self.location[v2], self.location[v3], self.location[v4]))
-                for color, (v1, v2, v3, v4) in self.edges]
+    def is_affected(self, axis: int, slc: int):
+        return self.current[axis] == slc
+
+    def update(self, axis: int, slc: int, dr: int):
+
+        if not self.is_affected(axis, slc):
+            return
+
+        i = (axis + 1) % 3
+        j = (axis + 2) % 3
+        for k in range(3):
+            self.rot[k][i], self.rot[k][j] = -self.rot[k][j] * dr, self.rot[k][i] * dr
+
+        self.current[i], self.current[j] = (
+            self.current[j] if dr < 0 else self.n - 1 - self.current[j],
+            self.current[i] if dr > 0 else self.n - 1 - self.current[i])
+
+    def transform_matrix(self):
+        s_a = [[s * self.scale for s in a] for a in self.rot]
+        s_t = [(p - (self.n - 1) / 2) * 2 * self.scale for p in self.current]
+        return [*s_a[0], 0, *s_a[1], 0, *s_a[2], 0, *s_t, 1]
+
+    def draw(self, surf, animate, angle, axis, slc, dr):
+
+        GL.glPushMatrix()
+        if animate and self.is_affected(axis, slc):
+            GL.glRotatef(angle * dr, *[1 if i == axis else 0 for i in range(3)])
+        GL.glMultMatrixf(self.transform_matrix())
+
+        GL.glBegin(GL.GL_QUADS)
+        for i in range(len(surf)):
+            GL.glColor3fv(Cube.colors[i])
+            for j in surf[i]:
+                GL.glVertex3fv(Cube.vertices[j])
+        GL.glEnd()
+
+        GL.glEnable(GL.GL_LINE_SMOOTH)
+        GL.glLineWidth(3)
+        GL.glDisable(GL.GL_LINE_SMOOTH)
+
+        GL.glBegin(GL.GL_LINES)
+        GL.glColor3fv((0, 0, 0))
+        for edge in Cube.edges:
+            for vertex in edge:
+                GL.glVertex3fv(Cube.vertices[vertex])
+        GL.glEnd()
+        GL.glPopMatrix()
 
 
 class Rubik:
-    def __init__(self, screen: pygame.Surface):
-        self.screen = screen
-        self.size = screen.get_width(), screen.get_height()
-        self.vertices = [(-1, -1, -1), (-1, -1, 1),
-                         (-1, 1, -1), (-1, 1, 1),
-                         (1, -1, -1), (1, -1, 1),
-                         (1, 1, -1), (1, 1, 1)]
-        self.polygons = [(COLORS["blue"], (0, 1, 3, 2)), (COLORS["yellow"], (0, 1, 5, 4)),
-                         (COLORS["green"], (4, 5, 7, 6)), (COLORS["white"], (2, 3, 7, 6)),
-                         (COLORS["orange"], (0, 4, 6, 2)), (COLORS["red"], (1, 5, 7, 3))]
-        self.cubes = self.init_cube()
-        self.faces = {"x": {}, "y": {}, "z": {}}
+    def __init__(self, n, scale):
+        self.n = n
+        cr = range(self.n)
+        self.scale = scale
+        self.cubes = self.init_cube(cr)
 
-    def init_cube(self) -> list[Object]:
+    def init_cube(self, cr):
         cubes = []
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                for k in range(-1, 2):
-                    vert = [(pos[0] + i * 2, pos[1] + j * 2, pos[2] + k * 2) for pos in self.vertices]
-                    cubes.append(Object(vert, self.polygons, 70, self.size))
+        for z in cr:
+            for y in cr:
+                for x in cr:
+                    cubes.append(Cube((x, y, z), self.n, self.scale))
         return cubes
-
-    def draw_shapes(self) -> None:
-        pol = []
-        for shape in self.cubes:
-            polygon = shape.polygon()
-            pol.extend(polygon)
-        pol.sort(key=lambda p: average_z(p[1]))
-
-        for col, points in pol:
-            po = list((fit_point(point, self.cubes[0])for point in points))
-            pygame.draw.polygon(self.screen, col, po)
-            pygame.draw.polygon(self.screen, BLACK, po, 3)
