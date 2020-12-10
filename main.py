@@ -5,10 +5,9 @@ import OpenGL.GLU as GLU
 from rubik import Rubik
 
 
-def main(screen):
-    rubik = Rubik(3, 2)
-    screen.fill(0xffffff)
-    rotate_cube = {pygame.K_UP: (-1, 0), pygame.K_DOWN: (1, 0), pygame.K_LEFT: (0, -1), pygame.K_RIGHT: (0, 1)}
+def main():
+    rubik = Rubik(2)
+    rotate_cube = {pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1), pygame.K_LEFT: (1, -1), pygame.K_RIGHT: (1, 1)}
     rotate_slc = {
         pygame.K_1: (0, 0, 1), pygame.K_2: (0, 1, 1), pygame.K_3: (0, 2, 1),
         pygame.K_4: (1, 0, 1), pygame.K_5: (1, 1, 1), pygame.K_6: (1, 2, 1),
@@ -16,7 +15,7 @@ def main(screen):
     }
 
     ang_x, ang_y = 45, -135
-    rot_cube = (0, 0)
+    rot_cube = [0, 0]
     animate = False
     animate_ang = 0
     animate_speed = 5
@@ -29,13 +28,14 @@ def main(screen):
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key in rotate_cube:
-                    rot_cube = rotate_cube[event.key]
+                    value = rotate_cube[event.key]
+                    rot_cube[value[0]] = value[1]
                 if not animate and event.key in rotate_slc:
                     animate = True
                     rotate = rotate_slc[event.key]
             if event.type == pygame.KEYUP:
                 if event.key in rotate_cube:
-                    rot_cube = (0, 0)
+                    rot_cube = [0, 0]
 
         ang_x += rot_cube[0] * 2
         ang_y += rot_cube[1] * 2
@@ -69,9 +69,10 @@ def main(screen):
 if __name__ == '__main__':
     pygame.init()
     display = (1080, 720)
-    win = pygame.display.set_mode(display, pygame.DOUBLEBUF | pygame.OPENGL)
+    pygame.display.set_mode(display, pygame.DOUBLEBUF | pygame.OPENGL)
+    pygame.display.set_caption("Directional arrows to rotate the cube, keys from 1 to 9 to rotate each faces")
     GL.glEnable(GL.GL_DEPTH_TEST)
     GL.glMatrixMode(GL.GL_PROJECTION)
     GLU.gluPerspective(45, (display[0] / display[1]), 1, 50.0)
-    main(win)
+    main()
     pygame.quit()

@@ -69,8 +69,8 @@ class Cube(object):
 
 
 class Rubik:
-    def __init__(self, n, scale):
-        self.n = n
+    def __init__(self, scale):
+        self.n = 3
         cr = range(self.n)
         self.scale = scale
         self.cubes = self.init_cube(cr)
