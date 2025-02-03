@@ -5,13 +5,46 @@ COLORS = {key: tuple(value[:3]) for key, value in pygame.color.THECOLORS.items()
 
 
 class Cube(object):
-    edges = ((0, 1), (0, 3), (0, 4), (2, 1), (2, 3), (2, 7), (6, 3), (6, 4), (6, 7), (5, 1), (5, 4), (5, 7))
-    polygons = ((0, 1, 2, 3), (3, 2, 7, 6), (6, 7, 5, 4), (4, 5, 1, 0), (1, 5, 7, 2), (4, 0, 3, 6))
-    vertices = (
-        (1, -1, -1), (1, 1, -1), (-1, 1, -1), (-1, -1, -1),
-        (1, -1, 1), (1, 1, 1), (-1, -1, 1), (-1, 1, 1)
+    edges = (
+        (0, 1),
+        (0, 3),
+        (0, 4),
+        (2, 1),
+        (2, 3),
+        (2, 7),
+        (6, 3),
+        (6, 4),
+        (6, 7),
+        (5, 1),
+        (5, 4),
+        (5, 7),
     )
-    colors = (COLORS["red"], COLORS["green"], (1, 0.5, 0), COLORS["orange"], COLORS["white"], COLORS["blue"])
+    polygons = (
+        (0, 1, 2, 3),
+        (3, 2, 7, 6),
+        (6, 7, 5, 4),
+        (4, 5, 1, 0),
+        (1, 5, 7, 2),
+        (4, 0, 3, 6),
+    )
+    vertices = (
+        (1, -1, -1),
+        (1, 1, -1),
+        (-1, 1, -1),
+        (-1, -1, -1),
+        (1, -1, 1),
+        (1, 1, 1),
+        (-1, -1, 1),
+        (-1, 1, 1),
+    )
+    colors = (
+        COLORS["blue"],
+        (1, 0.5, 0),# orange
+        COLORS["green"],
+        COLORS["red"],
+        COLORS["white"],
+        COLORS["yellow"],
+    )
 
     def __init__(self, ident: tuple, n: int, scale: int) -> None:
         self.n = n
@@ -34,7 +67,8 @@ class Cube(object):
 
         self.current[i], self.current[j] = (
             self.current[j] if dr < 0 else self.n - 1 - self.current[j],
-            self.current[i] if dr > 0 else self.n - 1 - self.current[i])
+            self.current[i] if dr > 0 else self.n - 1 - self.current[i],
+        )
 
     def transform_matrix(self):
         s_a = [[s * self.scale for s in a] for a in self.rot]
